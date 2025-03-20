@@ -7,9 +7,19 @@ import os
 
 def uploud(i):
     global files, image
-    image = cv2.imread(r'C:\Users\macmac\Downloads\pliki\{}'.format(files[i-ord('0')]))
-    norm_size()
+    files = [f for f in os.listdir(r'C:\Users\dawid\OneDrive\Pulpit\MP1')
+             if f.lower().endswith(('.png', '.jpg', '.jpeg', '.bmp')) and os.path.isfile(
+            os.path.join(r'C:\Users\dawid\OneDrive\Pulpit\MP1', f))]
 
+    try:
+        image_path = os.path.join(r'C:\Users\dawid\OneDrive\Pulpit\MP1', files[i - ord('0')])
+        image = cv2.imread(image_path)
+        if image is None:
+            print(f"Błąd: Nie udało się wczytać obrazu {image_path}")
+            return
+        norm_size()
+    except IndexError:
+        print("Błąd: Niepoprawny indeks pliku.")
 
 def resize():
     global image
@@ -132,7 +142,7 @@ files = None
 
 def main():
     global image, fun, files
-    files = os.listdir(r'C:\Users\macmac\Downloads\pliki')
+    files = os.listdir('C:\\Users\\dawid\\OneDrive\\Pulpit\\MP1')
     uploud(ord('0'))
     nimg = image.copy()
     cv2.createTrackbar('low', 'obrazek', 0, 255, change_h)
