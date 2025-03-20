@@ -165,6 +165,49 @@ def denoise_image():
 
     cv2.imshow('obrazek', mask)
 
+def mark_ball_center():
+    hsv_frame = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
+
+    # Zakres kolorów dla jasnoczerwonej piłki
+    lower_red1 = np.array([0, 100, 100])  # Dolny zakres (początek czerwieni)
+    upper_red1 = np.array([10, 255, 255])  # Górny zakres (jasnoczerwony)
+
+    lower_red2 = np.array([170, 100, 100])  # Drugi zakres czerwieni (na końcu spektrum)
+    upper_red2 = np.array([180, 255, 255])  # Górny zakres (czerwony)
+
+    # Tworzenie masek dla dwóch zakresów czerwieni
+    mask1 = cv2.inRange(hsv_frame, lower_red1, upper_red1)
+    mask2 = cv2.inRange(hsv_frame, lower_red2, upper_red2)
+
+    # Łączenie obu masek
+    mask = cv2.bitwise_or(mask1, mask2)
+
+    # Usuwanie szumu za pomocą operacji morfologicznych
+    kernel = np.ones((5, 5), np.uint8)
+    mask = cv2.morphologyEx(mask, cv2.MORPH_OPEN, kernel)  # Otwarcie (usuwa szum)
+    mask = cv2.morphologyEx(mask, cv2.MORPH_CLOSE, kernel)  # Zamknięcie (wypełnia dziury)
+
+    # Znalezienie konturów
+    contours, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+
+    if contours:
+        # Wybierz największy kontur, który będzie piłką
+        largest_contour = max(contours, key=cv2.contourArea)
+
+        # Oblicz momenty
+        M = cv2.moments(largest_contour)
+        if M["m00"] != 0:
+            cx = int(M["m10"] / M["m00"])
+            cy = int(M["m01"] / M["m00"])
+
+            # Dodanie markera na środek piłki
+            image_marker = image.copy()
+            cv2.drawMarker(image_marker, (cx, cy), (0, 255, 0), cv2.MARKER_CROSS, thickness=2)
+
+            cv2.imshow('obrazek', image_marker)
+        else:
+            print("Nie można obliczyć środka obiektu.")
+
 image = None
 fun = None
 files = None
@@ -242,6 +285,9 @@ def main():
         elif key == ord('n'):
             denoise_image()
             fun = denoise_image
+        elif key == ord('m'):
+            mark_ball_center()
+            fun = mark_ball_center
 
 if __name__ == '__main__':
     main()
