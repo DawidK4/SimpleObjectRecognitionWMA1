@@ -136,6 +136,35 @@ def change_h(x):
     if fun is not None:
         fun()
 
+def mask_ball():
+    hsv_frame = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
+
+    # Przykładowe wartości, dostosuj je do konkretnego koloru piłki
+    lower = np.array([20, 50, 50])  # Dolna granica koloru (np. żółty, zmień jeśli potrzebne)
+    upper = np.array([40, 255, 255])  # Górna granica koloru
+
+    mask = cv2.inRange(hsv_frame, lower, upper)  # Tworzenie maski
+    cv2.imshow('obrazek', mask)  # Wyświetlenie maski
+
+def denoise_image():
+    hsv_frame = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
+
+    # Przykładowe wartości dla usuwania szumu (dostosuj zakres)
+    lower = np.array([20, 50, 50])  
+    upper = np.array([40, 255, 255])  
+
+    mask = cv2.inRange(hsv_frame, lower, upper)
+
+    kernel = np.ones((5, 5), np.uint8)  # Filtr o rozmiarze 5x5
+
+    # Najpierw otwarcie (usuwa małe plamy szumu)
+    mask = cv2.morphologyEx(mask, cv2.MORPH_OPEN, kernel)
+
+    # Następnie zamknięcie (wypełnia dziury w obiektach)
+    mask = cv2.morphologyEx(mask, cv2.MORPH_CLOSE, kernel)
+
+    cv2.imshow('obrazek', mask)
+
 image = None
 fun = None
 files = None
@@ -207,7 +236,12 @@ def main():
         elif key == 27:
             cv2.destroyAllWindows()
             break
-
+        elif key == ord('b'):
+            mask_ball()
+            fun = mask_ball
+        elif key == ord('n'):
+            denoise_image()
+            fun = denoise_image
 
 if __name__ == '__main__':
     main()
