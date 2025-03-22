@@ -137,21 +137,34 @@ def change_h(x):
         fun()
 
 def mask_ball():
+    low_color = cv2.getTrackbarPos('low', 'obrazek')
+    high_color = cv2.getTrackbarPos('high', 'obrazek')
+
     hsv_frame = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
 
-    # Przykładowe wartości, dostosuj je do konkretnego koloru piłki
-    lower = np.array([20, 50, 50])  # Dolna granica koloru (np. żółty, zmień jeśli potrzebne)
-    upper = np.array([40, 255, 255])  # Górna granica koloru
+    # Define lower and upper color boundaries
+    lower = np.array([low_color, 50, 50])  
+    upper = np.array([high_color, 255, 255])  
 
-    mask = cv2.inRange(hsv_frame, lower, upper)  # Tworzenie maski
-    cv2.imshow('obrazek', mask)  # Wyświetlenie maski
+    # Create the binary mask
+    mask = cv2.inRange(hsv_frame, lower, upper)
+
+    # Apply morphological operations to remove noise
+    kernel = np.ones((5, 5), np.uint8)
+    mask = cv2.morphologyEx(mask, cv2.MORPH_OPEN, kernel)
+    mask = cv2.morphologyEx(mask, cv2.MORPH_CLOSE, kernel)
+
+    cv2.imshow('obrazek', mask)  
 
 def denoise_image():
+    low_color = cv2.getTrackbarPos('low', 'obrazek')
+    high_color = cv2.getTrackbarPos('high', 'obrazek')
+    
     hsv_frame = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
 
     # Przykładowe wartości dla usuwania szumu (dostosuj zakres)
-    lower = np.array([20, 50, 50])  
-    upper = np.array([40, 255, 255])  
+    lower = np.array([low_color, 50, 50])  
+    upper = np.array([high_color, 255, 255])  
 
     mask = cv2.inRange(hsv_frame, lower, upper)
 
@@ -165,48 +178,31 @@ def denoise_image():
 
     cv2.imshow('obrazek', mask)
 
-def mark_ball_center():
+def mark_object_center():
+    low_color = cv2.getTrackbarPos('low', 'obrazek')
+    high_color = cv2.getTrackbarPos('high', 'obrazek')
+
     hsv_frame = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
+    lower = np.array([low_color, 100, 100])
+    upper = np.array([high_color, 255, 255])
 
-    # Zakres kolorów dla jasnoczerwonej piłki
-    lower_red1 = np.array([0, 100, 100])  # Dolny zakres (początek czerwieni)
-    upper_red1 = np.array([10, 255, 255])  # Górny zakres (jasnoczerwony)
-
-    lower_red2 = np.array([170, 100, 100])  # Drugi zakres czerwieni (na końcu spektrum)
-    upper_red2 = np.array([180, 255, 255])  # Górny zakres (czerwony)
-
-    # Tworzenie masek dla dwóch zakresów czerwieni
-    mask1 = cv2.inRange(hsv_frame, lower_red1, upper_red1)
-    mask2 = cv2.inRange(hsv_frame, lower_red2, upper_red2)
-
-    # Łączenie obu masek
-    mask = cv2.bitwise_or(mask1, mask2)
-
-    # Usuwanie szumu za pomocą operacji morfologicznych
-    kernel = np.ones((5, 5), np.uint8)
-    mask = cv2.morphologyEx(mask, cv2.MORPH_OPEN, kernel)  # Otwarcie (usuwa szum)
-    mask = cv2.morphologyEx(mask, cv2.MORPH_CLOSE, kernel)  # Zamknięcie (wypełnia dziury)
-
-    # Znalezienie konturów
+    mask = cv2.inRange(hsv_frame, lower, upper)
     contours, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
 
     if contours:
-        # Wybierz największy kontur, który będzie piłką
-        largest_contour = max(contours, key=cv2.contourArea)
-
-        # Oblicz momenty
+        largest_contour = max(contours, key=cv2.contourArea)  # Choose the largest detected object
         M = cv2.moments(largest_contour)
         if M["m00"] != 0:
             cx = int(M["m10"] / M["m00"])
             cy = int(M["m01"] / M["m00"])
 
-            # Dodanie markera na środek piłki
             image_marker = image.copy()
-            cv2.drawMarker(image_marker, (cx, cy), (0, 255, 0), cv2.MARKER_CROSS, thickness=2)
-
+            cv2.drawMarker(image_marker, (cx, cy), color=(0, 255, 0), markerType=cv2.MARKER_CROSS, thickness=2)
             cv2.imshow('obrazek', image_marker)
         else:
             print("Nie można obliczyć środka obiektu.")
+    else:
+        print("Nie znaleziono żadnych obiektów.")    
 
 image = None
 fun = None
@@ -286,8 +282,8 @@ def main():
             denoise_image()
             fun = denoise_image
         elif key == ord('m'):
-            mark_ball_center()
-            fun = mark_ball_center
+            mark_object_center()
+            fun = mark_object_center
 
 if __name__ == '__main__':
     main()
