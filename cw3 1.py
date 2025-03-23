@@ -3,7 +3,7 @@ import numpy as np
 import os
 
 # pip install opencv-python
-
+# The image (assumed to be a global variable) is converted from BGR (default OpenCV format) to HSV (Hue, Saturation, Value).
 
 def uploud(i):
     global files, image
@@ -136,74 +136,6 @@ def change_h(x):
     if fun is not None:
         fun()
 
-def mask_ball():
-    low_color = cv2.getTrackbarPos('low', 'obrazek')
-    high_color = cv2.getTrackbarPos('high', 'obrazek')
-
-    hsv_frame = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
-
-    # Define lower and upper color boundaries
-    lower = np.array([low_color, 50, 50])  
-    upper = np.array([high_color, 255, 255])  
-
-    # Create the binary mask
-    mask = cv2.inRange(hsv_frame, lower, upper)
-
-    # Apply morphological operations to remove noise
-    kernel = np.ones((5, 5), np.uint8)
-    mask = cv2.morphologyEx(mask, cv2.MORPH_OPEN, kernel)
-    mask = cv2.morphologyEx(mask, cv2.MORPH_CLOSE, kernel)
-
-    cv2.imshow('obrazek', mask)  
-
-def denoise_image():
-    low_color = cv2.getTrackbarPos('low', 'obrazek')
-    high_color = cv2.getTrackbarPos('high', 'obrazek')
-    
-    hsv_frame = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
-
-    # Przykładowe wartości dla usuwania szumu (dostosuj zakres)
-    lower = np.array([low_color, 50, 50])  
-    upper = np.array([high_color, 255, 255])  
-
-    mask = cv2.inRange(hsv_frame, lower, upper)
-
-    kernel = np.ones((5, 5), np.uint8)  # Filtr o rozmiarze 5x5
-
-    # Najpierw otwarcie (usuwa małe plamy szumu)
-    mask = cv2.morphologyEx(mask, cv2.MORPH_OPEN, kernel)
-
-    # Następnie zamknięcie (wypełnia dziury w obiektach)
-    mask = cv2.morphologyEx(mask, cv2.MORPH_CLOSE, kernel)
-
-    cv2.imshow('obrazek', mask)
-
-def mark_object_center():
-    low_color = cv2.getTrackbarPos('low', 'obrazek')
-    high_color = cv2.getTrackbarPos('high', 'obrazek')
-
-    hsv_frame = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
-    lower = np.array([low_color, 100, 100])
-    upper = np.array([high_color, 255, 255])
-
-    mask = cv2.inRange(hsv_frame, lower, upper)
-    contours, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-
-    if contours:
-        largest_contour = max(contours, key=cv2.contourArea)  # Choose the largest detected object
-        M = cv2.moments(largest_contour)
-        if M["m00"] != 0:
-            cx = int(M["m10"] / M["m00"])
-            cy = int(M["m01"] / M["m00"])
-
-            image_marker = image.copy()
-            cv2.drawMarker(image_marker, (cx, cy), color=(0, 255, 0), markerType=cv2.MARKER_CROSS, thickness=2)
-            cv2.imshow('obrazek', image_marker)
-        else:
-            print("Nie można obliczyć środka obiektu.")
-    else:
-        print("Nie znaleziono żadnych obiektów.")    
-
 image = None
 fun = None
 files = None
@@ -275,15 +207,6 @@ def main():
         elif key == 27:
             cv2.destroyAllWindows()
             break
-        elif key == ord('b'):
-            mask_ball()
-            fun = mask_ball
-        elif key == ord('n'):
-            denoise_image()
-            fun = denoise_image
-        elif key == ord('m'):
-            mark_object_center()
-            fun = mark_object_center
 
 if __name__ == '__main__':
     main()

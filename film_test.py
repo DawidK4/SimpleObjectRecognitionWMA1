@@ -1,14 +1,14 @@
 import cv2
 
 video = cv2.VideoCapture()
-video.open(r'movingball.mp4')
+video.open(r'WMAVideo')
 total_frames = int(video.get(cv2.CAP_PROP_FRAME_COUNT))
 
 frame_width = int(video.get(3))
 frame_height = int(video.get(4))
 size = (frame_width, frame_height)
 result = cv2.VideoWriter(
-    'result.avi',  cv2.VideoWriter_fourcc(*'MJPG'), 20, size)
+    'result1.avi',  cv2.VideoWriter_fourcc(*'MJPG'), 20, size)
 
 counter = 1
 
