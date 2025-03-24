@@ -1,28 +1,45 @@
 import cv2
+import numpy as np
 
-video = cv2.VideoCapture()
-video.open(r'WMAVideo')
+video = cv2.VideoCapture(r'snow.mp4')
+video.open(r'snow.mp4')
 total_frames = int(video.get(cv2.CAP_PROP_FRAME_COUNT))
 
 frame_width = int(video.get(3))
 frame_height = int(video.get(4))
 size = (frame_width, frame_height)
 result = cv2.VideoWriter(
-    'result1.avi',  cv2.VideoWriter_fourcc(*'MJPG'), 20, size)
+    'catRes.avi', cv2.VideoWriter_fourcc(*'MJPG'), 20, size)
 
 counter = 1
 
 while True:
-    success, frame_rgb = video.read()
+    success, frame = video.read()
     if not success:
         break
-    print('klatka {} z {}'.format(counter, total_frames))
-    if counter % 2 == 0:
-        cv2.putText(frame_rgb, 'pilka', (100, 150),
-                    cv2.FONT_HERSHEY_SIMPLEX, 4, (255, 0, 0), 4)
+    
+    progress = (counter / total_frames) * 100
+    print(f'Processing frame {counter} of {total_frames} ({progress:.2f}%)')
+    
+    hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
 
-    result.write(frame_rgb)
-    counter = counter + 1
+    lower_black = np.array([0, 0, 0])
+    upper_black = np.array([180, 255, 50])
 
+    mask = cv2.inRange(hsv, lower_black, upper_black)
+
+    contours, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+
+    for contour in contours:
+        if cv2.contourArea(contour) > 1000:
+            x, y, w, h = cv2.boundingRect(contour)
+            cv2.rectangle(frame, (x, y), (x + w, y + h), (0, 0, 255), 3)
+            cx, cy = x + w // 2, y + h // 2
+            cv2.drawMarker(frame, (cx, cy), (0, 0, 255), markerType=cv2.MARKER_CROSS, thickness=2)
+    
+    result.write(frame)
+    counter += 1
+
+print("Processing complete!")
 video.release()
 result.release()

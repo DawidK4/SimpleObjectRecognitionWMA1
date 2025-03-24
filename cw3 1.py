@@ -137,6 +137,7 @@ def change_h(x):
         fun()
 
 def process_ball_image():
+    # In order to detect red the hue value has to be between 0 and 10!
     global fun
 
     try:
