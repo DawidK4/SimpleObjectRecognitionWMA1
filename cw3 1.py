@@ -136,6 +136,28 @@ def change_h(x):
     if fun is not None:
         fun()
 
+def process_ball_image():
+    global fun
+
+    try:
+        index = files.index('ball.png')  
+        uploud(ord('0') + index)  
+    except ValueError:
+        print("Błąd: Nie znaleziono pliku ball.png.")
+        return
+
+    hsv_range()  
+    fun = hsv_range
+
+    hsv_bitwais()  
+    fun = hsv_bitwais
+
+    morphology()  
+    fun = morphology
+
+    marker() 
+    fun = marker
+
 image = None
 fun = None
 files = None
@@ -207,6 +229,8 @@ def main():
         elif key == 27:
             cv2.destroyAllWindows()
             break
+        elif key == ord(','):
+            process_ball_image()
 
 if __name__ == '__main__':
-    main()
+    main()  
