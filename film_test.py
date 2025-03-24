@@ -26,8 +26,12 @@ while True:
     lower_black = np.array([0, 0, 0])
     upper_black = np.array([180, 255, 50])
 
+    # Creates a binary mask where black pixels appear white (255) and everything else is black (0)
     mask = cv2.inRange(hsv, lower_black, upper_black)
 
+    # Finds the boundaries of the detected black areas 
+    # RETR_EXTERNAL -> retrieves only the outermost contours
+    # CHAIN_APPROX_SIMPLE -> reduces the number of points in the contour
     contours, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
 
     for contour in contours:
